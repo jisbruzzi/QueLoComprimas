@@ -1,0 +1,128 @@
+<head>
+<script>
+function codigoDeCaracter(arbol,caracter){
+	if (arbol.hijos.length==0) return "_"
+	var arbol0 = arbol.hijos[0]
+	var arbol1 = arbol.hijos[1]
+	if (arbol0.hijos.length==0){
+		if(arbol0.c==caracter) return "0"
+	}else{
+		var resCompresion = codigoDeCaracter(arbol0,caracter)
+		if(resCompresion.indexOf("#")==-1){
+			return "0"+resCompresion
+		}
+	}
+	
+	if (arbol1.hijos.length==0){
+		if(arbol1.c==caracter) return "1"
+	}else{
+		var resCompresion = codigoDeCaracter(arbol1,caracter)
+		if(resCompresion.indexOf("#")==-1){
+			return "1"+resCompresion
+		}
+	}
+	
+	return "#"
+}
+function mejorarArbol(arbol,desempatador){
+	arbol.hijos.sort(function(a,b){
+			var posta =a.p-b.p
+			if (posta == 0) return desempatador(a,b)
+			return posta
+		})
+	arbol.hijos.reverse()
+	var len = arbol.hijos.length
+	var h0 = arbol.hijos[len-2]
+	var h1 = arbol.hijos[len-1]
+	arbol.hijos.splice(len-2,2)
+	var arbolito = {p:h0.p+h1.p, hijos:[h0,h1]}
+	arbol.hijos.push(arbolito)
+	return arbol
+}
+function construirArbolDeCaracteres(tabla){
+	var arbol={hijos:[]}
+	for (var prop in tabla){
+		if (tabla.hasOwnProperty(prop)){
+			arbol.hijos.push({c:prop, p:tabla[prop], hijos:[]})//c: caracter, p:puntaje
+		}
+	}
+	console.log("------------------------ inicia while")
+	while(arbol.hijos.length>2){
+		mejorarArbol(arbol,function(c1,c2){
+			while (c1.hijos.length != 0) c1 = c1.hijos[0]
+			while (c2.hijos.length != 0) c2 = c2.hijos[0]	
+			if (c1<c2) return -1
+			return 1
+		})
+	}
+	console.log(arbol)
+	return arbol
+}
+function comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias){
+	var arbol = construirArbolDeCaracteres(tablaDeFrecuencias)
+	return codigoDeCaracter(arbol,caracter)
+}
+function huffmanDinamico(entrada,abecedario,conDetalles){
+	//inicializar tabla de frecuencias
+	var tablaDeFrecuencias={}
+	//for(var abc=0; abc<abecedario.length; abc+=1){
+	//	tablaDeFrecuencias[abecedario[abc]]=0
+	//}
+	//ejecutar cada paso del huffmanDinamico
+	
+	var salida =""
+	for(var pos=0; pos<entrada.length; pos+=1){
+		var caracter = entrada[pos]
+		if(tablaDeFrecuencias.hasOwnProperty(caracter)){
+			tablaDeFrecuencias[caracter]+=1
+		}else{
+			tablaDeFrecuencias[caracter]=1
+		}
+		if(conDetalles){
+			salida += caracter+comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)+" "
+		}else{
+			salida += comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)
+		}
+	}
+	return salida
+	
+}
+function obtenerAbecedario(fuente){
+	var abecedario =""
+	for(var pos=0; pos<fuente.length; pos+=1){
+		caracter = fuente[pos]
+		if (abecedario.indexOf(caracter)==-1){
+			abecedario += caracter
+		}
+	}
+	return abecedario
+}
+function cambiaEntrada(){
+	entrada=document.getElementById("archivoEntrada").value
+	abecedario = obtenerAbecedario(entrada)//document.getElementById("conjuntoCaracteres").value
+	document.getElementById("conjuntoCaracteres").innerHTML = abecedario
+	var detalles = document.getElementById("conDetalles").checked
+	salida = huffmanDinamico(entrada, abecedario, detalles)
+	document.getElementById("archivoSalida").innerHTML = salida
+}
+</script>
+
+HUFFMAN DINAMICO
+</head>
+<body>
+	<p>Calculadora de Huffman Dinamico</p>
+	<p>archivo a comprimir  <input id="archivoEntrada" type ="text" 
+		onchange="cambiaEntrada()"
+		onclick="cambiaEntrada()"
+		oninput="cambiaEntrada()"
+		onkeydown="cambiaEntrada()"
+		onkeyup="cambiaEntrada()"
+		onpaste="cambiaEntrada()"
+		onpropertychange="cambiaEntrada()"
+		onkeypress="cambiaEntrada()"></input></p>
+	<p>Conjunto de caracteres:<i id="conjuntoCaracteres">caca</i></p>
+	<p>Archivo comprimido <u>(falta fin de archivo)</u>:<i id="archivoSalida">_</i></p>
+	<p>Agregar detalle de como queda comprimido cada caracter <input id = "conDetalles" onclick="cambiaEntrada()" type = "checkbox"></p>
+	
+	<p><button type="button" onclick="joda(0)" type ="button">Contarle a tus amigos</button></p>
+</body>

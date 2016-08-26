@@ -46,7 +46,7 @@ function construirArbolDeCaracteres(tabla){
 			arbol.hijos.push({c:prop, p:tabla[prop], hijos:[]})//c: caracter, p:puntaje
 		}
 	}
-	console.log("------------------------ inicia while")
+	//console.log("------------------------ inicia while")
 	while(arbol.hijos.length>2){
 		mejorarArbol(arbol,function(c1,c2){
 			while (c1.hijos.length != 0) c1 = c1.hijos[0]
@@ -55,7 +55,7 @@ function construirArbolDeCaracteres(tabla){
 			return 1
 		})
 	}
-	console.log(arbol)
+	//console.log(arbol)
 	return arbol
 }
 function comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias){
@@ -97,6 +97,28 @@ function obtenerAbecedario(fuente){
 	}
 	return abecedario
 }
+function cambiarVisibilidadPanel(contenedor){
+	var panel = contenedor.children["panel"]
+	var link = contenedor.children["link"]
+	console.log(panel)
+	if(panel.style.display=="block"){
+		panel.style.display = "none"
+		link.innerHTML=">expandir"
+	}else{
+		panel.style.display = "block"
+		link.innerHTML=">achicar"
+	}
+}
+function generarPanel(){
+	var nombrePanel="AAAA<u>B</u>SSSDD"
+	return "<div>"+
+		"<head><a id='link' href='javascript:void(0)' onclick='cambiarVisibilidadPanel(this.parentElement)'>>expandir</a>  "+nombrePanel+"</head>"+
+		"<body><div id='panel' style=\"display:none;\">CACA!</div></body>"+
+		"</div>"
+}
+function generarPaneles(contenedor){
+	contenedor.innerHTML=generarPanel()
+}
 function cambiaEntrada(){
 	entrada=document.getElementById("archivoEntrada").value
 	abecedario = obtenerAbecedario(entrada)//document.getElementById("conjuntoCaracteres").value
@@ -104,6 +126,9 @@ function cambiaEntrada(){
 	var detalles = document.getElementById("conDetalles").checked
 	salida = huffmanDinamico(entrada, abecedario, detalles)
 	document.getElementById("archivoSalida").innerHTML = salida
+	var contienePaneles = document.getElementById("contienePaneles")
+	generarPaneles(contienePaneles)
+	//<p><button type="button" onclick="joda(0)" type ="button">Contarle a tus amigos</button></p>
 }
 </script>
 
@@ -123,6 +148,6 @@ HUFFMAN DINAMICO
 	<p>Conjunto de caracteres:<i id="conjuntoCaracteres">caca</i></p>
 	<p>Archivo comprimido <u>(falta fin de archivo)</u>:<i id="archivoSalida">_</i></p>
 	<p>Agregar detalle de como queda comprimido cada caracter <input id = "conDetalles" onclick="cambiaEntrada()" type = "checkbox"></p>
+	<div id="contienePaneles"></div>
 	
-	<p><button type="button" onclick="joda(0)" type ="button">Contarle a tus amigos</button></p>
 </body>

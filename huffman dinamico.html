@@ -115,6 +115,13 @@ function generarPanel(){
 		"<head><a id='link' href='javascript:void(0)' onclick='cambiarVisibilidadPanel(this.parentElement)'>>expandir</a>  "+nombrePanel+"</head>"+
 		"<body><div id='panel' style=\"display:none;\">NADA!</div></body>"+
 		"</div>"
+	/*
+	LO QUE TENGO QUE METER ADENTRO: UN TAG CANVAS Y DESPUES HAGO
+	var my_canvas = document.getElementById("canvas")
+	var context = my_canvas.getContext("2d")
+	Y PARA DIBUJAR LO QUE QUIERA:
+	http://www.w3schools.com/tags/ref_canvas.asp
+	*/
 }
 function generarPaneles(contenedor){
 	contenedor.innerHTML=generarPanel()

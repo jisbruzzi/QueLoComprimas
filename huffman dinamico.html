@@ -62,29 +62,43 @@ function comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias){
 	var arbol = construirArbolDeCaracteres(tablaDeFrecuencias)
 	return codigoDeCaracter(arbol,caracter)
 }
-function huffmanDinamico(entrada,abecedario,conDetalles){
-	//inicializar tabla de frecuencias
-	var tablaDeFrecuencias={}
-	//for(var abc=0; abc<abecedario.length; abc+=1){
-	//	tablaDeFrecuencias[abecedario[abc]]=0
-	//}
-	//ejecutar cada paso del huffmanDinamico
+function copiarTablaDeFrecuencias(tabla){
+	var copia ={}
+	for (var p in tabla){
+		if( tabla.hasOwnProperty(p)){
+			copia[p] = tabla[p]
+		}
+	}
+	return copia
+}
+
+function huffmanDinamico(entrada,conDetalles){
+	//archivoFinal es el archivo que queda
+	//tablasDeFrecuencias es cómo está la tabla a cada momento
 	
-	var salida =""
+	//inicializar tabla de frecuencias
+	var tablasDeFrecuencias=[]
+	var tablaDeFrecuencias={}
+	console.log("----iniciando compresión-------")
+	var archivoFinal =""
 	for(var pos=0; pos<entrada.length; pos+=1){
 		var caracter = entrada[pos]
+		
 		if(tablaDeFrecuencias.hasOwnProperty(caracter)){
 			tablaDeFrecuencias[caracter]+=1
 		}else{
 			tablaDeFrecuencias[caracter]=1
 		}
+		var copia = copiarTablaDeFrecuencias(tablaDeFrecuencias)
+		tablasDeFrecuencias.push(copia)
+		
 		if(conDetalles){
-			salida += caracter+comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)+" "
+			archivoFinal += caracter+comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)+" "
 		}else{
-			salida += comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)
+			archivoFinal += comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)
 		}
 	}
-	return salida
+	return {archivoFinal:archivoFinal,tablasDeFrecuencias:tablasDeFrecuencias}
 	
 }
 function obtenerAbecedario(fuente){
@@ -100,7 +114,6 @@ function obtenerAbecedario(fuente){
 function cambiarVisibilidadPanel(contenedor){
 	var panel = contenedor.children["panel"]
 	var link = contenedor.children["link"]
-	console.log(panel)
 	if(panel.style.display=="block"){
 		panel.style.display = "none"
 		link.innerHTML=">expandir"
@@ -109,32 +122,60 @@ function cambiarVisibilidadPanel(contenedor){
 		link.innerHTML=">achicar"
 	}
 }
-function generarPanel(){
-	var nombrePanel="AAAA<u>B</u>SSSDD"
+function generarPanel(entrada,nCaracter,tablaDeFrecuencias){
+	//generar el nombe
+	var nombrePanel=""
+	nombrePanel += entrada.slice(0,nCaracter)//antes de nCaracter
+	nombrePanel += "<u>"+entrada[nCaracter]+"</u>"//el caracter resaltado
+	nombrePanel += entrada.slice(nCaracter+1,entrada.length)//después de nCaracter
+	//generar la tabla
+	var sTabla="<table style=\"border:2px solid red\">"+
+		"<tr>"+
+			"<th>caracter</th>"+
+			"<th>frecuencia/cantidad/puntaje</th>"+
+		"</tr>"
+	for(var p in tablaDeFrecuencias){
+		if( tablaDeFrecuencias.hasOwnProperty(p)){
+			sTabla+="<tr>"+
+				"<td>"+p+"</td>"+
+				"<td>"+tablaDeFrecuencias[p]+"</td>"+
+			"</tr>"
+		}
+	}
+	sTabla+="</table>"
+	var izquierda = sTabla
+	var derecha="<img src=\"http://i1.kym-cdn.com/entries/icons/original/000/000/045/n725075089_288918_2774.jpg\">"
+	var contenido="<div id=\"wrapper\" style=\"display:flex\"><div>"+izquierda+"</div><div>"+derecha+"</div> </div>"
 	return "<div>"+
 		"<head><a id='link' href='javascript:void(0)' onclick='cambiarVisibilidadPanel(this.parentElement)'>>expandir</a>  "+nombrePanel+"</head>"+
-		"<body><div id='panel' style=\"display:none;\">NADA!</div></body>"+
+		"<body><div id='panel' style=\"display:none;\">"+contenido+"</div></body>"+
 		"</div>"
 	/*
 	LO QUE TENGO QUE METER ADENTRO: UN TAG CANVAS Y DESPUES HAGO
 	var my_canvas = document.getElementById("canvas")
 	var context = my_canvas.getContext("2d")
+	context.moveTo()....
+	context.lineTo()...
 	Y PARA DIBUJAR LO QUE QUIERA:
 	http://www.w3schools.com/tags/ref_canvas.asp
 	*/
 }
-function generarPaneles(contenedor){
-	contenedor.innerHTML=generarPanel()
+function generarPaneles(contenedor,entrada,tablas){
+	contenedor.innerHTML =""
+	for(var i=0; i<entrada.length; i++){
+		contenedor.innerHTML+=generarPanel(entrada,i,tablas[i])
+		console.log(tablas[i])
+	}
 }
 function cambiaEntrada(){
-	entrada=document.getElementById("archivoEntrada").value
-	abecedario = obtenerAbecedario(entrada)//document.getElementById("conjuntoCaracteres").value
-	document.getElementById("conjuntoCaracteres").innerHTML = abecedario
+	var entrada=document.getElementById("archivoEntrada").value
+	//abecedario = obtenerAbecedario(entrada)//document.getElementById("conjuntoCaracteres").value
+	//document.getElementById("conjuntoCaracteres").innerHTML = abecedario
 	var detalles = document.getElementById("conDetalles").checked
-	salida = huffmanDinamico(entrada, abecedario, detalles)
-	document.getElementById("archivoSalida").innerHTML = salida
+	var salida = huffmanDinamico(entrada, detalles)
+	document.getElementById("archivoSalida").innerHTML = salida.archivoFinal
 	var contienePaneles = document.getElementById("contienePaneles")
-	generarPaneles(contienePaneles)
+	generarPaneles(contienePaneles,entrada,salida.tablasDeFrecuencias)
 	//<p><button type="button" onclick="joda(0)" type ="button">Contarle a tus amigos</button></p>
 }
 </script>
@@ -152,9 +193,12 @@ HUFFMAN DINAMICO
 		onpaste="cambiaEntrada()"
 		onpropertychange="cambiaEntrada()"
 		onkeypress="cambiaEntrada()"></input></p>
-	<p>Conjunto de caracteres:<i id="conjuntoCaracteres">caca</i></p>
 	<p>Archivo comprimido <u>(falta fin de archivo)</u>:<i id="archivoSalida">_</i></p>
 	<p>Agregar detalle de como queda comprimido cada caracter <input id = "conDetalles" onclick="cambiaEntrada()" type = "checkbox"></p>
 	<div id="contienePaneles"></div>
+	<p></p>
+	<p></p>
+	<p></p>
+	<p></p>
 	
 </body>

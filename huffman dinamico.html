@@ -68,7 +68,7 @@ function construirArbolDeCaracteres(tabla){
 		mejorarArbol(arbol,function(c1,c2){
 			while (c1.hijos.length != 0) c1 = c1.hijos[0]
 			while (c2.hijos.length != 0) c2 = c2.hijos[0]	
-			if (c1<c2) return -1
+			if (c1.c>c2.c) return -1
 			return 1
 		})
 	}
@@ -105,11 +105,6 @@ function huffmanDinamico(entrada, abecedario, conDetalles){
 	for(var pos=0; pos<entrada.length; pos+=1){
 		var caracter = entrada[pos]
 		
-		if(tablaDeFrecuencias.hasOwnProperty(caracter)){
-			tablaDeFrecuencias[caracter]+=1
-		}else{
-			tablaDeFrecuencias[caracter]=1
-		}
 		var copia = copiarTablaDeFrecuencias(tablaDeFrecuencias)
 		tablasDeFrecuencias.push(copia)
 		
@@ -117,6 +112,12 @@ function huffmanDinamico(entrada, abecedario, conDetalles){
 			archivoFinal += caracter+comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)+" "
 		}else{
 			archivoFinal += comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)
+		}
+		
+		if(tablaDeFrecuencias.hasOwnProperty(caracter)){
+			tablaDeFrecuencias[caracter]+=1
+		}else{
+			tablaDeFrecuencias[caracter]=1
 		}
 	}
 	return {archivoFinal:archivoFinal,tablasDeFrecuencias:tablasDeFrecuencias}

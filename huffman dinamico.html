@@ -1,5 +1,22 @@
 <head>
 <script>
+var tablasDeFrecuencias=[]
+var archivoEntrada=""
+function nivelesArbol(arbol){
+	console.log(arbol)
+	if (arbol.hijos.length==0){
+		return 0
+	}else{
+		if (arbol.hijos.length == 2){
+			var na0=nivelesArbol(arbol.hijos[0])
+			var na1=nivelesArbol(arbol.hijos[1])
+			var nivelesAbajo = Math.max(na1,na0)
+			return 1+nivelesAbajo
+		}else{
+			return 1+nivelesArbol(arbol.hijos[0])
+		}
+	}
+}
 function codigoDeCaracter(arbol,caracter){
 	if (arbol.hijos.length==0) return "_"
 	var arbol0 = arbol.hijos[0]
@@ -51,7 +68,7 @@ function construirArbolDeCaracteres(tabla){
 		mejorarArbol(arbol,function(c1,c2){
 			while (c1.hijos.length != 0) c1 = c1.hijos[0]
 			while (c2.hijos.length != 0) c2 = c2.hijos[0]	
-			if (c1<c2) return -1
+			if (c1.c>c2.c) return -1
 			return 1
 		})
 	}
@@ -62,29 +79,48 @@ function comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias){
 	var arbol = construirArbolDeCaracteres(tablaDeFrecuencias)
 	return codigoDeCaracter(arbol,caracter)
 }
-function huffmanDinamico(entrada,abecedario,conDetalles){
-	//inicializar tabla de frecuencias
-	var tablaDeFrecuencias={}
-	//for(var abc=0; abc<abecedario.length; abc+=1){
-	//	tablaDeFrecuencias[abecedario[abc]]=0
-	//}
-	//ejecutar cada paso del huffmanDinamico
+function copiarTablaDeFrecuencias(tabla){
+	var copia ={}
+	for (var p in tabla){
+		if( tabla.hasOwnProperty(p)){
+			copia[p] = tabla[p]
+		}
+	}
+	return copia
+}
+
+function huffmanDinamico(entrada, abecedario, conDetalles){
+	//archivoFinal es el archivo que queda
+	//tablasDeFrecuencias es cómo está la tabla a cada momento
 	
-	var salida =""
+	//inicializar tabla de frecuencias
+	var tablasDeFrecuencias=[]
+	var tablaDeFrecuencias={}
+	for(var c in abecedario){
+		tablaDeFrecuencias[abecedario[c]]=1
+	}
+	
+	console.log("----iniciando compresión-------")
+	var archivoFinal =""
 	for(var pos=0; pos<entrada.length; pos+=1){
 		var caracter = entrada[pos]
+		
+		var copia = copiarTablaDeFrecuencias(tablaDeFrecuencias)
+		tablasDeFrecuencias.push(copia)
+		
+		if(conDetalles){
+			archivoFinal += caracter+comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)+" "
+		}else{
+			archivoFinal += comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)
+		}
+		
 		if(tablaDeFrecuencias.hasOwnProperty(caracter)){
 			tablaDeFrecuencias[caracter]+=1
 		}else{
 			tablaDeFrecuencias[caracter]=1
 		}
-		if(conDetalles){
-			salida += caracter+comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)+" "
-		}else{
-			salida += comprimirCaracterHuffmanDinamico(caracter,tablaDeFrecuencias)
-		}
 	}
-	return salida
+	return {archivoFinal:archivoFinal,tablasDeFrecuencias:tablasDeFrecuencias}
 	
 }
 function obtenerAbecedario(fuente){
@@ -97,10 +133,91 @@ function obtenerAbecedario(fuente){
 	}
 	return abecedario
 }
-function cambiarVisibilidadPanel(contenedor){
+function dibujarArbolRecursivo(ctx,arbol,anchoTotal,xInicial,yInicial){
+	var radio = 20
+	if(arbol.hijos.length==2){
+		var y =yInicial+60
+		//línea al 0
+		ctx.beginPath()
+		ctx.strokeStyle="red"
+		var x0 =xInicial-anchoTotal/4
+		ctx.moveTo(xInicial,yInicial)
+		ctx.lineTo(x0,y)
+		ctx.stroke()
+		ctx.closePath()
+		//el 0
+		ctx.beginPath()
+		ctx.fillStyle="black"
+		ctx.font="20px Verdana"
+		ctx.fillText("0",(xInicial+x0)/2-7,(yInicial+y)/2+7)
+		ctx.fill()
+		ctx.closePath()
+		//que el subarbol del 0 se dibuje
+		dibujarArbolRecursivo(ctx,arbol.hijos[0],anchoTotal/2,x0,y)
+		
+		//línea al 1
+		ctx.beginPath()
+		ctx.strokeStyle="red"
+		var x1 =xInicial+anchoTotal/4
+		ctx.strokeStyle="red"
+		ctx.moveTo(xInicial,yInicial)
+		ctx.lineTo(x1,y)
+		ctx.stroke()
+		//el 1
+		ctx.beginPath()
+		ctx.fillStyle="black"
+		ctx.font="20px Verdana"
+		ctx.fillText("1",(xInicial+x1)/2-7,(yInicial+y)/2+7)
+		ctx.fill()
+		ctx.closePath()
+		//que el subarbol del 1 se dibuje
+		dibujarArbolRecursivo(ctx,arbol.hijos[1],anchoTotal/2,x1,y)
+		ctx.closePath()
+	}
+	//círculo
+	ctx.beginPath()
+	ctx.moveTo(xInicial+radio,yInicial)
+	ctx.arc(xInicial,yInicial,radio,0,2*Math.PI)
+	ctx.strokeStyle="red"
+	ctx.stroke()
+	ctx.fillStyle="orange"
+	ctx.fill()
+	ctx.closePath()
+	
+	if(arbol.hijos.length==0){
+		ctx.beginPath()
+		ctx.fillStyle="black"
+		ctx.font="20px Verdana"
+		ctx.fillText(arbol.c,xInicial-7,yInicial+7)
+		ctx.fill()
+		ctx.closePath()
+	}
+}
+function dibujarArbol(canvas,arbol){
+	var ctx = canvas.getContext("2d")
+	
+	var niveles = nivelesArbol(arbol)
+	var anchoTotal =100*Math.pow(2,niveles-1)
+	var altoTotal = niveles*60+40+40
+	var xInicial = anchoTotal/2
+	var yInicial = 40
+	ctx.fillStyle="black"
+	var estilo="border: 1px solid green;" +
+		" height:"+altoTotal+"px;" + " width:"+anchoTotal+"px;"
+		" max-height:"+altoTotal+"px;" + " max-width:"+anchoTotal+"px;"+
+		"overflow:auto;"
+	canvas.parentElement.style = estilo
+	//canvas.parentElement.parentElement.style = estilo
+	canvas.width=anchoTotal
+	canvas.height=altoTotal
+	//canvas.style = estilo
+	dibujarArbolRecursivo(ctx,arbol,anchoTotal,xInicial,yInicial)
+	
+}
+function cambiarVisibilidadPanel(contenedor,nCaracter){
+	//cambio el coso expandir/achicar
 	var panel = contenedor.children["panel"]
 	var link = contenedor.children["link"]
-	console.log(panel)
 	if(panel.style.display=="block"){
 		panel.style.display = "none"
 		link.innerHTML=">expandir"
@@ -108,26 +225,79 @@ function cambiarVisibilidadPanel(contenedor){
 		panel.style.display = "block"
 		link.innerHTML=">achicar"
 	}
+	//dibujo el canvas
+	var derecha = panel.children["wrapper"].children["der"]
+	var canvas = derecha.firstChild
+	
+	var tabla = tablasDeFrecuencias[nCaracter]
+	var arbol = construirArbolDeCaracteres(tabla)
+	dibujarArbol(canvas,arbol)
+	//pongo el resultado
+	var resultado = panel.children["resultado"]
+	resultado.innerHTML = "El resultado es:" + codigoDeCaracter(arbol,archivoEntrada[nCaracter])
+	
 }
-function generarPanel(){
-	var nombrePanel="AAAA<u>B</u>SSSDD"
-	return "<div>"+
-		"<head><a id='link' href='javascript:void(0)' onclick='cambiarVisibilidadPanel(this.parentElement)'>>expandir</a>  "+nombrePanel+"</head>"+
-		"<body><div id='panel' style=\"display:none;\">NADA!</div></body>"+
+function generarPanel(entrada,nCaracter,tablaDeFrecuencias){
+	//generar el nombe
+	var nombrePanel=""
+	nombrePanel += entrada.slice(0,nCaracter)//antes de nCaracter
+	nombrePanel += "<u>"+entrada[nCaracter]+"</u>"//el caracter resaltado
+	nombrePanel += entrada.slice(nCaracter+1,entrada.length)//después de nCaracter
+	//generar la tabla
+	var sTabla="<table style=\"border:2px solid red\">"+
+		"<tr>"+
+			"<th>caracter</th>"+
+			"<th>frecuencia/cantidad/puntaje</th>"+
+		"</tr>"
+	for(var p in tablaDeFrecuencias){
+		if( tablaDeFrecuencias.hasOwnProperty(p)){
+			sTabla+="<tr>"+
+				"<td>"+p+"</td>"+
+				"<td>"+tablaDeFrecuencias[p]+"</td>"+
+			"</tr>"
+		}
+	}
+	sTabla+="</table>"
+	//arbol
+	var arbol = construirArbolDeCaracteres(tablaDeFrecuencias)
+	
+	//devolver panel
+	var arriba ="<div id=\"resultado\"></div>"
+	var izquierda = sTabla
+	var derecha="<canvas></canvas>" // "<img src=\"http://i1.kym-cdn.com/entries/icons/original/000/000/045/n725075089_288918_2774.jpg\">"
+	var contenido=arriba + "<div id=\"wrapper\" style=\"display:flex\"><div id=\"izq\">"+izquierda+"</div><div id=\"der\">"+derecha+"</div> </div>"
+	return "<div style=\"overflow:auto;\">"+
+		"<head><a id='link' href='javascript:void(0)' onclick='cambiarVisibilidadPanel(this.parentElement,"+nCaracter+")'>>expandir</a>  "+nombrePanel+"</head>"+
+		"<body><div id='panel' style=\"display:none; overflow:auto;\">"+contenido+"</div></body>"+
 		"</div>"
+	/*
+	LO QUE TENGO QUE METER ADENTRO: UN TAG CANVAS Y DESPUES HAGO
+	var my_canvas = document.getElementById("canvas")
+	var context = my_canvas.getContext("2d")
+	context.moveTo()....
+	context.lineTo()...
+	Y PARA DIBUJAR LO QUE QUIERA:
+	http://www.w3schools.com/tags/ref_canvas.asp
+	*/
 }
-function generarPaneles(contenedor){
-	contenedor.innerHTML=generarPanel()
+function generarPaneles(contenedor,entrada,tablas){
+	contenedor.innerHTML =""
+	for(var i=0; i<entrada.length; i++){
+		contenedor.innerHTML+=generarPanel(entrada,i,tablas[i])
+		console.log(tablas[i])
+	}
 }
 function cambiaEntrada(){
-	entrada=document.getElementById("archivoEntrada").value
+	var entrada=document.getElementById("archivoEntrada").value
 	abecedario = obtenerAbecedario(entrada)//document.getElementById("conjuntoCaracteres").value
 	document.getElementById("conjuntoCaracteres").innerHTML = abecedario
+	archivoEntrada=entrada
 	var detalles = document.getElementById("conDetalles").checked
-	salida = huffmanDinamico(entrada, abecedario, detalles)
-	document.getElementById("archivoSalida").innerHTML = salida
+	var salida = huffmanDinamico(entrada, abecedario,detalles)
+	tablasDeFrecuencias = salida.tablasDeFrecuencias
+	document.getElementById("archivoSalida").innerHTML = salida.archivoFinal
 	var contienePaneles = document.getElementById("contienePaneles")
-	generarPaneles(contienePaneles)
+	generarPaneles(contienePaneles,entrada,salida.tablasDeFrecuencias)
 	//<p><button type="button" onclick="joda(0)" type ="button">Contarle a tus amigos</button></p>
 }
 </script>
@@ -145,9 +315,14 @@ HUFFMAN DINAMICO
 		onpaste="cambiaEntrada()"
 		onpropertychange="cambiaEntrada()"
 		onkeypress="cambiaEntrada()"></input></p>
-	<p>Conjunto de caracteres:<i id="conjuntoCaracteres">caca</i></p>
-	<p>Archivo comprimido <u>(falta fin de archivo)</u>:<i id="archivoSalida">_</i></p>
+	<p>Conjunto de caracteres:<u id="conjuntoCaracteres">_</u></p>
+	<p>Archivo comprimido*:<i id="archivoSalida">_</i></p>
+	<p>*<u>(falta fin de archivo y tabla de caracteres y potencialmente más cosas)</u></p>
 	<p>Agregar detalle de como queda comprimido cada caracter <input id = "conDetalles" onclick="cambiaEntrada()" type = "checkbox"></p>
 	<div id="contienePaneles"></div>
+	<p></p>
+	<p></p>
+	<p></p>
+	<p></p>
 	
 </body>
